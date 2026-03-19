@@ -1,0 +1,14 @@
+{
+  "user_preferences": {
+    "service_type": "Thai Massage",
+    "massage_style": "Traditional Thai Massage",
+    "price_range": {
+      "min": 1000,
+      "max": 1500
+    },
+    "session_duration_minutes": 60,
+    "ambiance_preference": "Modern and chic",
+    "additional_services": "Open to suggestions",
+    "preferred_time": "10:00 PM"
+  }
+}

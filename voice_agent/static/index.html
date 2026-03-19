@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voice Call Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin-top: 20px;
+        }
+
+        /* ========== LOADING STATE ========== */
+        .loading-container {
+            text-align: center;
+            padding: 60px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(139, 92, 246, 0.2);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            color: #a5b4fc;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .loading-subtext {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* ========== FORM CARD ========== */
+        .form-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
+            padding: 28px 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                transform: translateX(-30%) translateY(-30%);
+            }
+
+            50% {
+                transform: translateX(30%) translateY(30%);
+            }
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.85);
+            position: relative;
+            z-index: 1;
+            line-height: 1.5;
+        }
+
+        .form-body {
+            padding: 32px;
+        }
+
+        /* Form Fields */
+        .field {
+            margin-bottom: 24px;
+            animation: fadeIn 0.3s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .field:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .field:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .field:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .field:nth-child(4) {
+            animation-delay: 0.25s;
+        }
+
+        .field:nth-child(5) {
+            animation-delay: 0.3s;
+        }
+
+        .field:nth-child(6) {
+            animation-delay: 0.35s;
+        }
+
+        .field:nth-child(7) {
+            animation-delay: 0.4s;
+        }
+
+        .field:nth-child(8) {
+            animation-delay: 0.45s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .field label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+        }
+
+        .required-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #f1f5f9;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .field input::placeholder,
+        .field textarea::placeholder {
+            color: #64748b;
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .field input:hover,
+        .field select:hover,
+        .field textarea:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .field select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 44px;
+        }
+
+        .field select option {
+            background: #1e293b;
+            color: #f1f5f9;
+        }
+
+        .field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Special Requests Checkboxes */
+        .special-requests-container {
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .special-requests-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #c4b5fd;
+            margin-bottom: 16px;
+        }
+
+        .special-requests-title::before {
+            content: "✨";
+            font-size: 18px;
+        }
+
+        .special-requests-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-item:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            margin-right: 12px;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            border-color: #8b5cf6;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .checkbox-label {
+            color: #e2e8f0;
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-container:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .toggle {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 999px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle.active {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+        }
+
+        .toggle.active::after {
+            transform: translateX(22px);
+        }
+
+        .toggle-label {
+            color: #94a3b8;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+        .toggle-container:has(.toggle.active) .toggle-label {
+            color: #e2e8f0;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.5);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Waiting State */
+        .waiting-container {
+            text-align: center;
+            padding: 60px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .waiting-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .waiting-text {
+            color: #a5b4fc;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .waiting-subtext {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .retry-btn {
+            margin-top: 24px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            color: #fca5a5;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* ========== CALL STATUS VIEW ========== */
+        #callStatusView {
+            display: none;
+        }
+
+        .call-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .call-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .call-header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .call-header-title .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            animation: pulseDot 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseDot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.8);
+            }
+        }
+
+        .btn-danger {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            transition: all 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        /* Chat Area */
+        #chat {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            min-height: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .row {
+            display: flex;
+            margin-bottom: 4px;
+        }
+
+        .msg {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            white-space: pre-wrap;
+            display: inline-block;
+            max-width: 85%;
+            line-height: 1.5;
+        }
+
+        .msg.owner {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .msg.ai {
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #d8b4fe;
+            border-left: 4px solid #a855f7;
+        }
+
+        .msg.system {
+            background: rgba(251, 191, 36, 0.15);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            color: #fcd34d;
+            align-self: center;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .msg.info-chunk {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+            border-left: 4px solid #10b981;
+        }
+
+        .msg.requirement-confirmation {
+            border-left-width: 4px;
+            font-weight: 500;
+        }
+
+        .msg-speaker {
+            font-weight: 600;
+            margin-right: 8px;
+            opacity: 0.9;
+        }
+
+        .msg-text {
+            word-break: break-word;
+        }
+
+        /* Call Footer */
+        .call-footer {
+            padding: 16px 28px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .call-info {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .new-call-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .new-call-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ========== APPROVAL MODAL ========== */
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .backdrop.show {
+            display: flex;
+        }
+
+        .approval-modal {
+            width: 480px;
+            max-width: 90vw;
+            background: #1e293b;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .approval-content {
+            background: linear-gradient(135deg, #6b21a8 0%, #7c3aed 100%);
+            color: white;
+            padding: 24px;
+        }
+
+        .approval-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .approval-title::before {
+            content: "⚠️";
+            font-size: 24px;
+        }
+
+        .approval-description {
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            opacity: 0.95;
+        }
+
+        .approval-details {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        .approval-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 4px 0;
+        }
+
+        .approval-detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .approval-detail-row span:first-child {
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .approval-detail-row span:last-child {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .countdown {
+            text-align: center;
+            font-size: 72px;
+            font-weight: 700;
+            color: #f59e0b;
+            margin: 24px 0;
+            line-height: 1;
+            text-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+            background: #0f172a;
+            padding: 16px 0;
+        }
+
+        .approval-buttons {
+            display: flex;
+            gap: 12px;
+            padding: 20px 24px;
+            background: #0f172a;
+        }
+
+        .btn-approve {
+            flex: 1;
+            padding: 14px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-approve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-deny {
+            flex: 1;
+            padding: 14px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-deny:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-approve:disabled,
+        .btn-deny:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Pending Approval in chat */
+        .pending-approval {
+            background: rgba(251, 191, 36, 0.15);
+            border: 2px solid rgba(251, 191, 36, 0.4);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .pending-approval-title {
+            font-weight: 600;
+            color: #fcd34d;
+            margin-bottom: 8px;
+        }
+
+        .pending-approval-desc {
+            font-size: 13px;
+            color: #fcd34d;
+            opacity: 0.8;
+            margin-bottom: 12px;
+        }
+
+        .pending-approval-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .pending-approval-buttons .btn-approve,
+        .pending-approval-buttons .btn-deny {
+            flex: 1;
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+
+        .pending-approval-buttons .btn-approve,
+        .pending-approval-buttons .btn-deny {
+            flex: 1;
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+
+        /* ========== CALL TYPE CARDS ========== */
+        .call-type-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .section-subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .call-type-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .call-type-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .call-type-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .call-type-card.active {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 1px #8b5cf6, 0 10px 20px -5px rgba(139, 92, 246, 0.3);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .call-type-card.active .card-icon {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .call-type-card.active .check-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            background: #c084fc;
+            color: white;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        /* Section Styling */
+        .form-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header-icon {
+            font-size: 20px;
+            color: #c4b5fd;
+        }
+
+        .section-header h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .readonly-input {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border-color: transparent !important;
+            color: #94a3b8 !important;
+            pointer-events: none;
+        }
+
+        /* Price Intelligence */
+        .price-intelligence-card {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+            box-shadow: 0 10px 20px -5px rgba(124, 58, 237, 0.4);
+        }
+
+        .pi-header {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0.9;
+        }
+
+        .pi-price {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .pi-sub {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Form View -->
+        <div id="formView">
+            <div id="app">
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading form...</div>
+                    <div class="loading-subtext pulse">Fetching schema from server</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call Status View (hidden initially) -->
+        <div id="callStatusView">
+            <div class="call-card">
+                <div class="call-header">
+                    <div class="call-header-title">
+                        <span class="pulse-dot"></span>
+                        Live Call with Business Owner
+                    </div>
+                    <button class="btn-danger" id="stopBtn" type="button">End Call</button>
+                </div>
+                <div id="chat"></div>
+                <div class="call-footer">
+                    <span class="call-info" id="callInfo">Call in progress...</span>
+                    <button class="new-call-btn" id="newCallBtn" style="display: none;">Start New Call</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div class="backdrop" id="approvalBackdrop">
+        <div class="approval-modal">
+            <div class="approval-content">
+                <div class="approval-title">Approval Required</div>
+                <div class="approval-description" id="approvalDescription"></div>
+                <div class="approval-details" id="approvalDetails"></div>
+            </div>
+            <div class="countdown" id="approvalCountdown">10</div>
+            <div class="approval-buttons">
+                <button class="btn-approve" id="approveBtn">Approve</button>
+                <button class="btn-deny" id="denyBtn">Deny</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== STATE VARIABLES ==========
+        const app = document.getElementById('app');
+        let currentSchema = null;
+        let pollingInterval = null;
+
+        let socket = null;
+        let currentCallId = null;
+        let currentApproval = null;
+        let approvalCountdown = null;
+        let userPhoneNumber = null;
+        const seenMessages = new Set();
+
+        // ========== VIEW SWITCHING ==========
+        function showFormView() {
+            document.getElementById('formView').style.display = 'block';
+            document.getElementById('callStatusView').style.display = 'none';
+        }
+
+        function showCallStatusView() {
+            document.getElementById('formView').style.display = 'none';
+            document.getElementById('callStatusView').style.display = 'block';
+            document.getElementById('newCallBtn').style.display = 'none';
+            document.getElementById('callInfo').textContent = 'Call in progress...';
+        }
+
+        // ========== FORM RENDERING ==========
+        function renderWaitingState() {
+            app.innerHTML = `
+                <div class="waiting-container">
+                    <div class="waiting-icon">⏳</div>
+                    <div class="waiting-text">Waiting for Query</div>
+                    <div class="waiting-subtext">
+                        Enter a query in the terminal to generate a form.<br>
+                        For example: "Find a gym near me"
+                    </div>
+                    <button class="retry-btn" onclick="fetchSchema()">Check Again</button>
+                </div>
+            `;
+        }
+
+
+
+        function renderField(field, prefillValue) {
+            const requiredBadge = field.required ? '<span class="required-badge">Required</span>' : '';
+            let inputHTML = '';
+            const valueAttr = prefillValue ? `value="${escapeHtml(String(prefillValue))}"` : '';
+
+            switch (field.type) {
+                case 'text':
+                    inputHTML = `<input type="text" id="${field.id}" name="${field.id}" ${valueAttr} placeholder="${escapeHtml(field.placeholder || '')}" ${field.required ? 'required' : ''} />`;
+                    break;
+                case 'tel':
+                    inputHTML = `<input type="tel" id="${field.id}" name="${field.id}" ${valueAttr} placeholder="${escapeHtml(field.placeholder || '+91XXXXXXXXXX')}" pattern="[+]?[0-9]{10,15}" ${field.required ? 'required' : ''} />`;
+                    break;
+                case 'number':
+                    inputHTML = `<input type="number" id="${field.id}" name="${field.id}" ${valueAttr} placeholder="${escapeHtml(field.placeholder || '')}" min="0" ${field.required ? 'required' : ''} />`;
+                    break;
+                case 'date':
+                    inputHTML = `<input type="date" id="${field.id}" name="${field.id}" ${valueAttr} ${field.required ? 'required' : ''} />`;
+                    break;
+                case 'textarea':
+                    const textValue = prefillValue || '';
+                    inputHTML = `<textarea id="${field.id}" name="${field.id}" placeholder="${escapeHtml(field.placeholder || '')}" ${field.required ? 'required' : ''}>${escapeHtml(String(textValue))}</textarea>`;
+                    break;
+                case 'select':
+                    const options = (field.options || []).map(opt => {
+                        const selected = prefillValue && String(opt) === String(prefillValue) ? 'selected' : '';
+                        return `<option value="${escapeHtml(opt)}" ${selected}>${escapeHtml(opt)}</option>`;
+                    }).join('');
+                    inputHTML = `<select id="${field.id}" name="${field.id}" ${field.required ? 'required' : ''}><option value="">Select an option...</option>${options}</select>`;
+                    break;
+                case 'boolean':
+                    inputHTML = `
+                        <div class="toggle-container" onclick="toggleBoolean('${field.id}')">
+                            <div class="toggle" id="toggle-${field.id}"></div>
+                            <span class="toggle-label" id="label-${field.id}">No</span>
+                            <input type="hidden" id="${field.id}" name="${field.id}" value="false" />
+                        </div>
+                    `;
+                    break;
+                default:
+                    inputHTML = `<input type="text" id="${field.id}" name="${field.id}" ${valueAttr} placeholder="${escapeHtml(field.placeholder || '')}" ${field.required ? 'required' : ''} />`;
+            }
+
+            return `
+                <div class="field">
+                    <label for="${field.id}">${escapeHtml(field.label)} ${requiredBadge}</label>
+                    ${inputHTML}
+                </div>
+            `;
+        }
+
+        function renderSpecialRequests(preselected = [], options = []) {
+            // Use dynamic options from schema, or fallback if empty
+            const specialOptions = (options && options.length > 0)
+                ? options
+                : ['First Service Warning', 'Urgent Request', 'Budget Constraint', 'Call Back Request'];
+
+            const checkboxesHTML = specialOptions.map(option => {
+                const checked = preselected.includes(option) ? 'checked' : '';
+                const id = `special_${option.toLowerCase().replace(/[\s-]/g, '_')}`;
+                return `
+                    <label class="checkbox-item">
+                        <input type="checkbox" 
+                               name="special_requests[]" 
+                               value="${escapeHtml(option)}" 
+                               id="${id}"
+                               ${checked}>
+                        <span class="checkbox-label">${escapeHtml(option)}</span>
+                    </label>
+                `;
+            }).join('');
+
+            return `
+                <div class="special-requests-container">
+                    <div class="special-requests-title">Special Requests</div>
+                    <div class="special-requests-grid">
+                        ${checkboxesHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleBoolean(fieldId) {
+            const toggle = document.getElementById(`toggle-${fieldId}`);
+            const label = document.getElementById(`label-${fieldId}`);
+            const input = document.getElementById(fieldId);
+            const isActive = toggle.classList.toggle('active');
+            input.value = isActive ? 'true' : 'false';
+            label.textContent = isActive ? 'Yes' : 'No';
+        }
+
+        // ========== FORM SUBMISSION ==========
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const form = document.getElementById('dynamicForm');
+            const formData = new FormData(form);
+            const data = {
+                call_type: selectedCallType // Add selected call type
+            };
+
+            // Collect special requests as array
+            const specialRequests = [];
+            const checkboxes = form.querySelectorAll('input[name="special_requests[]"]');
+            checkboxes.forEach(cb => {
+                if (cb.checked) specialRequests.push(cb.value);
+            });
+            if (specialRequests.length > 0) {
+                data.special_requests = specialRequests;
+            }
+
+            for (const [key, value] of formData.entries()) {
+                if (key === 'special_requests[]') continue; // Already handled above
+                if (value === 'true') data[key] = true;
+                else if (value === 'false') data[key] = false;
+                else if (currentSchema.fields.find(f => f.id === key && f.type === 'number') && value) {
+                    data[key] = Number(value);
+                }
+                else data[key] = value;
+            }
+
+            const submitBtn = form.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Starting call...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success' && result.call_id) {
+                    currentCallId = result.call_id;
+                    showCallStatusView();
+                    connectWebSocket(result.call_id);
+                } else {
+                    alert('Error: ' + result.message);
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                alert('Failed to submit form. Please try again.');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // ========== STATE VARIABLES ==========
+        let selectedCallType = 'info'; // Default
+
+        // ========== FORM RENDERING ==========
+        function renderForm(schema) {
+            currentSchema = schema;
+            const priceRange = schema.business_price_range || "Not available";
+            const budget = schema.user_budget || "";
+
+            // Call Type Selection HTML
+            const callTypesHTML = `
+                <div class="call-type-section">
+                    <h2 class="section-title">📞 Choose Call Type</h2>
+                    <p class="section-subtitle">How would you like the AI to handle the call to ${escapeHtml(schema.business_name)}?</p>
+                    <div class="call-type-grid">
+                        <div class="call-type-card ${selectedCallType === 'info' ? 'active' : ''}" onclick="selectCallType('info')">
+                            <div class="card-icon">📋</div>
+                            <div class="card-content">
+                                <div class="card-title">Information Only</div>
+                                <div class="card-desc">Just gather details about availability, pricing, and terms. No booking.</div>
+                            </div>
+                            <div class="check-icon">✓</div>
+                        </div>
+                        <div class="call-type-card ${selectedCallType === 'negotiation' ? 'active' : ''}" onclick="selectCallType('negotiation')">
+                            <div class="card-icon">💰</div>
+                            <div class="card-content">
+                                <div class="card-title">Negotiation Focus</div>
+                                <div class="card-desc">Focus on getting the best price. Negotiate for discounts and better terms.</div>
+                            </div>
+                            <div class="check-icon">✓</div>
+                        </div>
+                        <div class="call-type-card ${selectedCallType === 'auto' ? 'active' : ''}" onclick="selectCallType('auto')">
+                            <div class="card-icon">⚡</div>
+                            <div class="card-content">
+                                <div class="card-title">Auto (Smart) <span class="badge">Recommended</span></div>
+                                <div class="card-desc">Book automatically if price matches budget. Ask for approval if higher.</div>
+                            </div>
+                            <div class="check-icon">✓</div>
+                        </div>
+                        <div class="call-type-card ${selectedCallType === 'booking' ? 'active' : ''}" onclick="selectCallType('booking')">
+                            <div class="card-icon">✅</div>
+                            <div class="card-content">
+                                <div class="card-title">Booking</div>
+                                <div class="card-desc">Always complete the booking, but request approval before confirming.</div>
+                            </div>
+                            <div class="check-icon">✓</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Common Fields (Dynamic Details)
+            const serviceCategory = schema.service_category || "Service";
+            const commonFieldsHTML = `
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="header-icon">💬</div>
+                        <h3>${escapeHtml(serviceCategory)} Details</h3>
+                    </div>
+                    <div class="field">
+                        <label>Provider Name</label>
+                        <input type="text" id="business_name" name="business_name" value="${escapeHtml(schema.business_name)}" placeholder="Business Name">
+                    </div>
+                    ${renderField({ id: 'service', label: schema.service_label || 'Service Type', type: 'text', placeholder: 'e.g. Service Name' }, schema.prefillValues.service)}
+                    ${renderField({ id: 'urgency', label: schema.urgency_label || 'Urgency', type: 'text', placeholder: 'e.g. Within 24 hours' }, schema.prefillValues.urgency || "Within 24 hours")}
+                    ${renderField({ id: 'location', label: 'Service Address', type: 'text', placeholder: 'e.g. Preferred Location' }, schema.prefillValues.location)}
+                    ${renderField({ id: 'owner_phone', label: 'Owner Phone Number', type: 'tel', required: true, placeholder: '+91XXXXXXXXXX' }, schema.prefillValues.owner_phone)}
+                </div>
+            `;
+
+            // AI Price Intelligence Section (Visible for Negotiation/Auto/Booking)
+            const priceSectionHTML = `
+                <div class="form-section" id="priceSection" style="display: none;">
+                    <div class="section-header">
+                        <div class="header-icon">💲</div>
+                        <h3>AI Price Intelligence</h3>
+                    </div>
+                    <div class="price-intelligence-card">
+                        <div class="pi-header">
+                            <span class="pi-icon">✨</span> AI Estimated Price Range
+                        </div>
+                        <div class="pi-price">₹${escapeHtml(priceRange)}</div>
+                        <div class="pi-sub">Based on market analysis and historical data</div>
+                    </div>
+                    ${renderField({ id: 'budget', label: 'Your Budget', type: 'number', required: true }, budget)}
+                </div>
+            `;
+
+            // Booking Details Section (Visible for Auto/Booking)
+            const bookingSectionHTML = `
+                <div class="form-section" id="bookingSection" style="display: none;">
+                    <div class="section-header">
+                        <div class="header-icon">📅</div>
+                        <h3>Booking Details</h3>
+                    </div>
+                     ${renderField({ id: 'preferred_date', label: 'Preferred Date', type: 'date', required: true }, schema.prefillValues.preferred_date)}
+                     ${renderField({ id: 'preferred_time', label: 'Preferred Time', type: 'text', placeholder: 'e.g. 10:00 AM', required: true }, schema.prefillValues.preferred_time)}
+                     ${renderField({ id: 'user_phone', label: 'Your Phone Number', type: 'tel', required: true, placeholder: '+91...' }, schema.prefillValues.user_phone)}
+                </div>
+            `;
+
+            // Special Requests (Always visible)
+            const specialRequestsHTML = `
+                <div class="form-section">
+                     <div class="section-header">
+                        <div class="header-icon">💬</div>
+                        <h3>Special Requests</h3>
+                    </div>
+                    ${renderSpecialRequests(schema.prefillValues.special_requests || [], schema.special_request_options || [])}
+                    <div class="field">
+                        <label>Additional Notes</label>
+                        <textarea name="notes" placeholder="Any other specific requests or information...">${escapeHtml(schema.prefillValues.notes || "")}</textarea>
+                    </div>
+                </div>
+            `;
+
+            app.innerHTML = `
+                <div class="form-card">
+                    <form id="dynamicForm" onsubmit="handleSubmit(event)">
+                        ${callTypesHTML}
+                        ${commonFieldsHTML}
+                        ${priceSectionHTML}
+                        ${bookingSectionHTML}
+                        ${specialRequestsHTML}
+                        <button type="submit" class="submit-btn" id="mainSubmitBtn">
+                            Submit & Start Voice Agent
+                        </button>
+                    </form>
+                </div>
+            `;
+
+            // Initial visibility update
+            updateSectionVisibility();
+        }
+
+        function selectCallType(type) {
+            selectedCallType = type;
+            // Update UI cards
+            document.querySelectorAll('.call-type-card').forEach(card => card.classList.remove('active'));
+            document.querySelector(`.call-type-card[onclick="selectCallType('${type}')"]`).classList.add('active');
+
+            updateSectionVisibility();
+        }
+
+        function updateSectionVisibility() {
+            const priceSection = document.getElementById('priceSection');
+            const bookingSection = document.getElementById('bookingSection');
+
+            // Helper to toggle fields
+            const toggleFields = (section, shouldDisable) => {
+                const fields = section.querySelectorAll('input, select, textarea');
+                fields.forEach(field => {
+                    field.disabled = shouldDisable;
+                });
+            };
+
+            // Logic based on requirements:
+            // 1. Info Only: Only common + special requests (Price/Booking HIDDEN)
+            // 2. Negotiation: Common + Price + Special (Booking HIDDEN)
+            // 3. Auto/Booking: ALL SECTIONS VISIBLE
+
+            if (selectedCallType === 'info') {
+                priceSection.style.display = 'none';
+                toggleFields(priceSection, true); // Disable fields
+
+                bookingSection.style.display = 'none';
+                toggleFields(bookingSection, true); // Disable fields
+            } else if (selectedCallType === 'negotiation') {
+                priceSection.style.display = 'block';
+                toggleFields(priceSection, false); // Enable fields
+
+                bookingSection.style.display = 'none';
+                toggleFields(bookingSection, true); // Disable fields
+            } else {
+                // Auto or Booking
+                priceSection.style.display = 'block';
+                toggleFields(priceSection, false); // Enable fields
+
+                bookingSection.style.display = 'block';
+                toggleFields(bookingSection, false); // Enable fields
+            }
+        }
+
+        async function fetchSchema() {
+            try {
+                const response = await fetch('/api/schema');
+                const data = await response.json();
+
+                if (response.status === 202 || data.status === 'waiting') {
+                    renderWaitingState();
+                    startPolling();
+                } else {
+                    renderForm(data);
+                }
+            } catch (error) {
+                console.error('Error fetching schema:', error);
+                const app = document.getElementById('app');
+                app.innerHTML = `
+                    <div class="error-container" style="text-align: center; padding: 20px; color: #ff6b6b;">
+                        <p>Failed to load form.</p>
+                        <button class="retry-btn" onclick="fetchSchema()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        function startPolling() {
+            if (pollingInterval) return;
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/schema');
+                    const data = await response.json();
+                    if (response.status !== 202 && data.status !== 'waiting') {
+                        stopPolling();
+                        renderForm(data);
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 2000);
+        }
+
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========== WEBSOCKET & CHAT ==========
+        function buildWsUrl(callId) {
+            const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+            return `${proto}//${window.location.host}/ws/call/${callId}`;
+        }
+
+        function connectWebSocket(callId) {
+            if (socket) socket.close();
+            seenMessages.clear();
+
+            socket = new WebSocket(buildWsUrl(callId));
+            document.getElementById("chat").innerHTML = "";
+
+            socket.onopen = () => {
+                console.log("[WEBSOCKET] Connected");
+                addMessage({ speaker: "SYSTEM", text: "Connected to live feed..." });
+
+                const pingInterval = setInterval(() => {
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({ type: "ping" }));
+                    } else {
+                        clearInterval(pingInterval);
+                    }
+                }, 30000);
+                socket._pingInterval = pingInterval;
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log("[WEBSOCKET] Received:", data);
+
+                    if (data.type === "pong") return;
+
+                    if (data.type === "approval_request") {
+                        handleApprovalRequest(data.approval);
+                    } else if (data.type === "approval_timeout") {
+                        handleApprovalTimeout(data.approval);
+                    } else if (data.type === "approval_response") {
+                        handleApprovalResponse(data);
+                    } else if (data.type === "pending_approval") {
+                        // Ignore after call ends
+                    } else if (data.type === "info_chunk") {
+                        handleInfoChunk(data);
+                    } else if (data.type === "requirement_confirmation") {
+                        handleRequirementConfirmation(data);
+                    } else if (data.type === "clear_conversation") {
+                        // Clear chat before final transcript to prevent duplicates
+                        console.log("[CLEAR] Clearing conversation display:", data.reason || "unknown");
+                        const chat = document.getElementById("chat");
+                        if (chat) {
+                            chat.innerHTML = "";
+                            console.log("[CLEAR] ✅ Chat display cleared");
+                        }
+                    } else if (data.type === "conversation_update" || data.type === "status" || data.type === "summary") {
+                        if (data.text || data.speaker) {
+                            if (data.partial && typeof data.index !== 'undefined') {
+                                const elementId = "msg-" + data.index;
+                                const existingBubble = document.getElementById(elementId);
+                                if (existingBubble) {
+                                    const textSpan = existingBubble.querySelector(".msg-text");
+                                    if (textSpan) {
+                                        textSpan.textContent = " " + data.text;
+                                        const chat = document.getElementById("chat");
+                                        if (chat) chat.scrollTop = chat.scrollHeight;
+                                    }
+                                    return;
+                                }
+                            }
+                            addMessage(data);
+
+                            // Check for call end
+                            if (data.type === "summary" || (data.text && data.text.includes("Call ended"))) {
+                                document.getElementById('callInfo').textContent = 'Call completed';
+                                document.getElementById('newCallBtn').style.display = 'inline-block';
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("[WEBSOCKET] Error:", e);
+                }
+            };
+
+            socket.onerror = (error) => console.error("WebSocket error:", error);
+
+            socket.onclose = (event) => {
+                console.log("[WEBSOCKET] Closed", event.code);
+                if (socket._pingInterval) clearInterval(socket._pingInterval);
+            };
+        }
+
+        function addMessage(msg) {
+            if (!msg || (!msg.text && !msg.speaker)) return;
+
+            const chat = document.getElementById("chat");
+            const isSystem = (msg.speaker === "SYSTEM");
+            const text = msg.text || "";
+
+            const msgKey = typeof msg.index !== 'undefined'
+                ? `${msg.index}-${msg.speaker}-${text.substring(0, 50)}`
+                : `${msg.speaker}-${text.substring(0, 50)}-${Date.now()}`;
+
+            if (typeof msg.index !== 'undefined') {
+                const elementId = "msg-" + msg.index;
+                const existingBubble = document.getElementById(elementId);
+                if (existingBubble) {
+                    const textSpan = existingBubble.querySelector(".msg-text");
+                    const currentText = textSpan ? textSpan.textContent.trim() : "";
+                    if (currentText !== msg.text) {
+                        updateBubbleText(existingBubble, msg.text);
+                    }
+                    return;
+                }
+            }
+
+            if (seenMessages.has(msgKey) && typeof msg.index === 'undefined') return;
+            seenMessages.add(msgKey);
+
+            const lastBubble = chat.lastElementChild ? chat.lastElementChild.querySelector(".msg") : null;
+            if (lastBubble && !isSystem && typeof msg.index === 'undefined') {
+                const lastSpeaker = lastBubble.classList.contains("ai") ? "AI" :
+                    lastBubble.classList.contains("owner") ? "Owner" : "SYSTEM";
+
+                if (lastSpeaker === msg.speaker) {
+                    const textSpan = lastBubble.querySelector(".msg-text");
+                    const currentText = textSpan ? textSpan.textContent.trim() : "";
+
+                    if (msg.text.startsWith(currentText) && msg.text.length > currentText.length) {
+                        updateBubbleText(lastBubble, msg.text);
+                        return;
+                    }
+
+                    const similarity = currentText.length > 0
+                        ? (currentText.split(' ').filter(w => msg.text.includes(w)).length / currentText.split(' ').length)
+                        : 0;
+
+                    if (similarity > 0.7 && msg.text.length >= currentText.length * 0.8) {
+                        updateBubbleText(lastBubble, msg.text);
+                        return;
+                    }
+                }
+            }
+
+            createNewBubble(msg, chat, isSystem);
+        }
+
+        function updateBubbleText(bubble, newText) {
+            const textSpan = bubble.querySelector(".msg-text");
+            if (textSpan) textSpan.textContent = " " + newText;
+            const chat = document.getElementById("chat");
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function createNewBubble(msg, container, isSystem) {
+            const row = document.createElement("div");
+            row.classList.add("row");
+            row.style.justifyContent = isSystem ? "center" : "flex-start";
+
+            const bubble = document.createElement("div");
+            bubble.classList.add("msg");
+
+            if (msg.speaker === "Owner") bubble.classList.add("owner");
+            else if (msg.speaker === "AI") bubble.classList.add("ai");
+            else bubble.classList.add("system");
+
+            if (typeof msg.index !== 'undefined') bubble.id = "msg-" + msg.index;
+
+            if (!isSystem) {
+                const speakerSpan = document.createElement("span");
+                speakerSpan.classList.add("msg-speaker");
+                speakerSpan.textContent = msg.speaker + ":";
+                bubble.appendChild(speakerSpan);
+            }
+
+            const textSpan = document.createElement("span");
+            textSpan.classList.add("msg-text");
+            textSpan.textContent = " " + msg.text;
+            bubble.appendChild(textSpan);
+
+            row.appendChild(bubble);
+            container.appendChild(row);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ========== INFO CHUNK HANDLING ==========
+        function handleInfoChunk(data) {
+            const chat = document.getElementById("chat");
+            if (!chat) return;
+
+            let displayText = "";
+            let icon = "";
+
+            if (data.info_type === "price") {
+                icon = "💰";
+                displayText = `Price mentioned: ₹${data.value}`;
+            } else if (data.info_type === "available_facility") {
+                icon = "✅";
+                displayText = `Available: ${data.value}`;
+            } else if (data.info_type === "unavailable_facility") {
+                icon = "❌";
+                displayText = `Not available: ${data.value}`;
+            } else {
+                displayText = `${data.info_type}: ${data.value}`;
+            }
+
+            const row = document.createElement("div");
+            row.className = "row";
+
+            const bubble = document.createElement("div");
+            bubble.className = "msg info-chunk";
+
+            const textSpan = document.createElement("span");
+            textSpan.className = "msg-text";
+            textSpan.textContent = ` ${icon} ${displayText}`;
+
+            bubble.appendChild(textSpan);
+            row.appendChild(bubble);
+            chat.appendChild(row);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        // ========== REQUIREMENT CONFIRMATION ==========
+        function handleRequirementConfirmation(data) {
+            const chat = document.getElementById("chat");
+            if (!chat) return;
+
+            const reqTypeNames = { "budget": "Budget", "date": "Date", "requirement": "Requirement", "time": "Time" };
+            const reqName = reqTypeNames[data.requirement_type] || data.requirement_type;
+
+            let icon = "⏳";
+            let bgColor = "rgba(251, 191, 36, 0.15)";
+            let borderColor = "#f59e0b";
+
+            if (data.status === "confirmed") {
+                icon = "✅";
+                bgColor = "rgba(16, 185, 129, 0.15)";
+                borderColor = "#10b981";
+            } else if (data.status === "not_available") {
+                icon = "❌";
+                bgColor = "rgba(239, 68, 68, 0.15)";
+                borderColor = "#ef4444";
+            }
+
+            const row = document.createElement("div");
+            row.className = "row";
+
+            const bubble = document.createElement("div");
+            bubble.className = "msg requirement-confirmation";
+            bubble.style.backgroundColor = bgColor;
+            bubble.style.borderLeftColor = borderColor;
+            bubble.style.borderColor = borderColor.replace("1)", "0.3)");
+            bubble.style.color = borderColor;
+
+            const textSpan = document.createElement("span");
+            textSpan.className = "msg-text";
+            textSpan.textContent = ` ${icon} ${reqName}: ${data.message || data.value || data.status}`;
+
+            bubble.appendChild(textSpan);
+            row.appendChild(bubble);
+            chat.appendChild(row);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        // ========== APPROVAL HANDLING ==========
+        function handleApprovalRequest(approval) {
+            console.log("[APPROVAL] Request received:", approval);
+            currentApproval = approval;
+
+            const modal = document.getElementById("approvalBackdrop");
+            const descEl = document.getElementById("approvalDescription");
+            const detailsEl = document.getElementById("approvalDetails");
+            const approveBtn = document.getElementById("approveBtn");
+            const denyBtn = document.getElementById("denyBtn");
+
+            if (!modal || !descEl || !detailsEl) return;
+
+            approveBtn.disabled = false;
+            denyBtn.disabled = false;
+
+            let descriptionText = approval.description || "Approval needed for negotiation";
+            const requirement = approval.requirement || "";
+            const originalValue = (approval.original_value && approval.original_value.toString().trim()) || "";
+            const negotiatedValue = (approval.negotiated_value && approval.negotiated_value.toString().trim()) || "";
+            const budget = approval.user_budget || approval.student_budget;
+
+            if (originalValue && negotiatedValue && requirement) {
+                if (originalValue === negotiatedValue) {
+                    descriptionText = `Owner insists on price of ${originalValue} for ${requirement}. Cannot reduce further.`;
+                } else {
+                    descriptionText = `After negotiation, owner agreed to reduce from ${originalValue} to ${negotiatedValue} for ${requirement}.`;
+                }
+            } else if (originalValue && negotiatedValue) {
+                if (originalValue === negotiatedValue) {
+                    descriptionText = `Owner insists on price of ${originalValue}. Cannot reduce further.`;
+                } else {
+                    descriptionText = `After negotiation, owner agreed to reduce from ${originalValue} to ${negotiatedValue}.`;
+                }
+            }
+            descEl.textContent = descriptionText;
+
+            let detailsHTML = "";
+            let budgetNum = null;
+            if (budget !== null && budget !== undefined && budget !== "" && budget !== "null") {
+                budgetNum = typeof budget === 'number' ? budget : parseFloat(budget);
+            }
+
+            if (budgetNum !== null && !isNaN(budgetNum) && budgetNum >= 0) {
+                detailsHTML += `<div class="approval-detail-row"><span>Your Budget:</span><span style="color: #60a5fa;">₹${budgetNum}</span></div>`;
+            } else {
+                detailsHTML += `<div class="approval-detail-row"><span>Your Budget:</span><span style="opacity: 0.7;">Not specified</span></div>`;
+            }
+
+            if (originalValue) {
+                const formatted = originalValue.startsWith('₹') ? originalValue : `₹${originalValue}`;
+                detailsHTML += `<div class="approval-detail-row"><span>Owner's Demand:</span><span style="color: #f87171;">${formatted}</span></div>`;
+            } else {
+                detailsHTML += `<div class="approval-detail-row"><span>Owner's Demand:</span><span style="opacity: 0.7;">Not specified</span></div>`;
+            }
+
+            if (negotiatedValue) {
+                const formatted = negotiatedValue.startsWith('₹') ? negotiatedValue : `₹${negotiatedValue}`;
+                detailsHTML += `<div class="approval-detail-row"><span>Final Price:</span><span style="color: #34d399; font-size: 16px;">${formatted}</span></div>`;
+            } else {
+                detailsHTML += `<div class="approval-detail-row"><span>Final Price:</span><span style="opacity: 0.7;">Not specified</span></div>`;
+            }
+
+            detailsEl.innerHTML = detailsHTML;
+            modal.classList.add("show");
+            startApprovalCountdown(10);
+        }
+
+        function startApprovalCountdown(seconds) {
+            const countdownEl = document.getElementById("approvalCountdown");
+            if (!countdownEl) return;
+
+            let remaining = seconds;
+            countdownEl.textContent = remaining;
+
+            if (approvalCountdown) clearInterval(approvalCountdown);
+
+            approvalCountdown = setInterval(() => {
+                remaining--;
+                countdownEl.textContent = remaining;
+                if (remaining <= 0) {
+                    clearInterval(approvalCountdown);
+                    approvalCountdown = null;
+                    handleApprovalTimeout();
+                }
+            }, 1000);
+        }
+
+        function handleApprovalTimeout(approval) {
+            if (approvalCountdown) {
+                clearInterval(approvalCountdown);
+                approvalCountdown = null;
+            }
+            const modal = document.getElementById("approvalBackdrop");
+            if (modal) modal.classList.remove("show");
+            if (approval) showPendingApproval(approval);
+            addMessage({ speaker: "SYSTEM", text: "⏱️ Approval timeout. The AI will inform the owner that you'll call back." });
+        }
+
+        function handleApprovalResponse(data) {
+            if (approvalCountdown) {
+                clearInterval(approvalCountdown);
+                approvalCountdown = null;
+            }
+            document.getElementById("approvalBackdrop").classList.remove("show");
+            addMessage({ speaker: "SYSTEM", text: data.approved ? "✅ Approval sent. Call will continue." : "❌ Denial sent. Call will end." });
+            currentApproval = null;
+        }
+
+        function showPendingApproval(approval) {
+            const chat = document.getElementById("chat");
+            const pendingDiv = document.createElement("div");
+            pendingDiv.className = "pending-approval";
+            pendingDiv.innerHTML = `
+                <div class="pending-approval-title">⏳ Pending Approval</div>
+                <div class="pending-approval-desc">${approval.description || "Approval needed"}</div>
+                <div class="pending-approval-buttons">
+                    <button class="btn-approve" onclick="handlePendingApproval(true)">Approve</button>
+                    <button class="btn-deny" onclick="handlePendingApproval(false)">Deny</button>
+                </div>
+            `;
+            chat.appendChild(pendingDiv);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        async function handlePendingApproval(approved) {
+            if (!currentCallId) return;
+            try {
+                const endpoint = approved ? "/approve" : "/deny";
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ call_id: currentCallId, approved: approved, user_phone: userPhoneNumber })
+                });
+                const data = await response.json();
+                if (data.status === "ok") {
+                    addMessage({ speaker: "SYSTEM", text: approved ? "✅ Approval processed." : "❌ Denial processed." });
+                    const pendingEl = document.querySelector(".pending-approval");
+                    if (pendingEl) pendingEl.remove();
+                }
+            } catch (err) {
+                console.error("Error handling approval:", err);
+            }
+        }
+
+        // ========== CALL CONTROLS ==========
+        async function stopCall() {
+            if (currentCallId) {
+                addMessage({ speaker: "SYSTEM", text: "Ending call..." });
+                try {
+                    await fetch("/stop-call", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ call_id: currentCallId })
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        }
+
+        function startNewCall() {
+            if (socket) socket.close();
+            currentCallId = null;
+            currentApproval = null;
+            seenMessages.clear();
+            showFormView();
+            fetchSchema();
+        }
+
+        // ========== EVENT LISTENERS ==========
+        document.getElementById("stopBtn").addEventListener("click", stopCall);
+        document.getElementById("newCallBtn").addEventListener("click", startNewCall);
+
+        document.getElementById("approveBtn").addEventListener("click", async (e) => {
+            e.preventDefault();
+            if (!currentApproval || !currentCallId) return;
+            if (approvalCountdown) {
+                clearInterval(approvalCountdown);
+                approvalCountdown = null;
+            }
+            try {
+                const response = await fetch("/approve", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ call_id: currentCallId, approved: true, user_phone: userPhoneNumber })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === "ok") {
+                        handleApprovalResponse({ approved: true });
+                    }
+                } else {
+                    alert("Error sending approval.");
+                }
+            } catch (err) {
+                console.error("Error approving:", err);
+            }
+        });
+
+        document.getElementById("denyBtn").addEventListener("click", async (e) => {
+            e.preventDefault();
+            if (!currentApproval || !currentCallId) return;
+            if (approvalCountdown) {
+                clearInterval(approvalCountdown);
+                approvalCountdown = null;
+            }
+            try {
+                const response = await fetch("/deny", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ call_id: currentCallId, approved: false })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === "ok") {
+                        handleApprovalResponse({ approved: false });
+                    }
+                } else {
+                    alert("Error sending denial.");
+                }
+            } catch (err) {
+                console.error("Error denying:", err);
+            }
+        });
+
+        // ========== INITIALIZATION ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const callIdFromUrl = urlParams.get("call_id");
+
+            if (callIdFromUrl) {
+                console.log("[INIT] Found call_id in URL:", callIdFromUrl);
+                currentCallId = callIdFromUrl;
+                showCallStatusView();
+                connectWebSocket(callIdFromUrl);
+            } else {
+                showFormView();
+                fetchSchema();
+            }
+        });
+    </script>
+</body>
+
+</html>
